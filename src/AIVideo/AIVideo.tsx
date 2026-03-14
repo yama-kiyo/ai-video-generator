@@ -56,6 +56,7 @@ const FPS = 30;
 const CROSSFADE = 15;
 const TITLE_DUR = 90;
 const END_DUR = 75;
+const NAR_PAD = 30; // ナレーション前後の無音パディング（1秒）
 
 // ── テーマ ──
 const THEMES = {
@@ -63,16 +64,20 @@ const THEMES = {
   light: { bg: "#F5F3EF", text: "#222", sub: "#888", muted: "#555", captionBg: "#F5F3EF" },
 };
 
-// ── タイムライン計算 ──
+// ── タイムライン計算（音声が先、映像は音声の尺に合わせる） ──
 export function calcTimeline(sections: SectionDef[]) {
-  const frames = sections.map((s) => Math.ceil(s.durSec * FPS));
+  const narFrames = sections.map((s) => Math.ceil(s.durSec * FPS));
+  // audioがあるセクションは頭尻にパディングを追加
+  const frames = sections.map((s, i) =>
+    s.audio ? narFrames[i] + NAR_PAD * 2 : narFrames[i],
+  );
   const starts: number[] = [];
   let cursor = TITLE_DUR;
   for (let i = 0; i < frames.length; i++) {
     starts.push(cursor);
     cursor += frames[i] - (i < frames.length - 1 ? CROSSFADE : 0);
   }
-  return { frames, starts, total: cursor + END_DUR };
+  return { narFrames, frames, starts, total: cursor + END_DUR };
 }
 
 // ── タイトル ──
@@ -203,7 +208,7 @@ const Ending: React.FC<{ text: string; theme: typeof THEMES.dark }> = ({ text, t
 export const AIVideo: React.FC<{ project: ProjectDef }> = ({ project: inputProject }) => {
   const project = { ...DEFAULT_PROJECT, ...inputProject };
   const theme = THEMES[project.theme ?? "dark"];
-  const { frames, starts, total } = calcTimeline(project.sections);
+  const { narFrames, frames, starts, total } = calcTimeline(project.sections);
 
   return (
     <AbsoluteFill style={{ backgroundColor: theme.bg }}>
@@ -228,10 +233,10 @@ export const AIVideo: React.FC<{ project: ProjectDef }> = ({ project: inputProje
         <Ending text={project.endingText ?? "つづく"} theme={theme} />
       </Sequence>
 
-      {/* ナレーション（頭尻に1秒パディングで重なり防止） */}
+      {/* ナレーション（セクション内で頭1秒後に開始、フル再生） */}
       {project.sections.map((sec, i) =>
         sec.audio ? (
-          <Sequence key={`nar-${i}`} from={starts[i] + 30} durationInFrames={frames[i] - 30}>
+          <Sequence key={`nar-${i}`} from={starts[i] + NAR_PAD} durationInFrames={narFrames[i]}>
             <Audio src={staticFile(sec.audio)} volume={1} />
           </Sequence>
         ) : null,

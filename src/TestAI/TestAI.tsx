@@ -11,6 +11,7 @@ import {
 const FPS = 30;
 const BG = "#0A0A0A";
 const CROSSFADE = 15;
+const NAR_PAD = 30; // ナレーション前後の無音パディング（1秒）
 
 // セクション定義（ナレーション尺に合わせる）
 const sections = [
@@ -37,8 +38,9 @@ const sections = [
 const TITLE_DUR = 90;
 const END_DUR = 75;
 
-// 各セクションの開始フレームと尺
-const sectionFrames = sections.map((s) => Math.ceil(s.durSec * FPS));
+// 各セクションの開始フレームと尺（音声が先、映像は音声の尺に合わせる）
+const narFrames = sections.map((s) => Math.ceil(s.durSec * FPS)); // ナレーション実尺
+const sectionFrames = narFrames.map((nf) => nf + NAR_PAD * 2);   // セクション尺 = ナレーション + 頭尻パディング
 const sectionStarts: number[] = [];
 let cursor = TITLE_DUR;
 for (let i = 0; i < sectionFrames.length; i++) {
@@ -229,12 +231,12 @@ export const TestAI: React.FC = () => {
         <Ending />
       </Sequence>
 
-      {/* ナレーション（頭尻に1秒パディングで重なり防止） */}
+      {/* ナレーション（セクション内で頭1秒後に開始、フル再生） */}
       {sections.map((sec, i) => (
         <Sequence
           key={`nar-${i}`}
-          from={sectionStarts[i] + 30}
-          durationInFrames={sectionFrames[i] - 30}
+          from={sectionStarts[i] + NAR_PAD}
+          durationInFrames={narFrames[i]}
         >
           <Audio src={staticFile(sec.audio)} volume={1} />
         </Sequence>

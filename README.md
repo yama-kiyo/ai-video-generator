@@ -202,12 +202,18 @@ node scripts/generate-ai-video.mjs --config sections.json
 
 ## ナレーション間隔について
 
-各ナレーション音声の再生開始を **1秒（30フレーム）遅延** させ、セクション切替時に音声が重ならないようにしています。
-これは `AIVideo.tsx` / `TestAI.tsx` の Audio Sequence に組み込み済みです。
+**原則: 音声を先に配置し尺を決め、映像をそれに合わせる。**
+
+セクションの尺は `ナレーション実尺 + 頭1秒 + 尻1秒` で計算されます。
+ナレーションは絶対にカットされず、フル再生されます。
 
 ```tsx
-// from に +30（1秒遅延）、durationInFrames をセクション尺内に制限
-<Sequence from={sectionStarts[i] + 30} durationInFrames={sectionFrames[i] - 30}>
+const NAR_PAD = 30; // 1秒 @30fps
+const narFrames = sections.map((s) => Math.ceil(s.durSec * FPS));
+const sectionFrames = narFrames.map((nf) => nf + NAR_PAD * 2);
+
+// ナレーション: 頭1秒後に開始、実尺分フル再生
+<Sequence from={sectionStarts[i] + NAR_PAD} durationInFrames={narFrames[i]}>
   <Audio src={staticFile(sec.audio)} volume={1} />
 </Sequence>
 ```
