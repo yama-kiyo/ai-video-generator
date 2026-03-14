@@ -51,9 +51,9 @@ const VOICES = {
   aria: "9BWtsMINqrJLrRacOk9x",
   lily: "pFZP5JQG7iQjIQuC4Bku",
   charlotte: "XB0fDUnXU5powFXDhCwa",
-  voice_5l5f: "5l5f8iK3YPeGga21rQIX",
-  voice_hA4z: "hA4zGnmTwX2NQiTRMt7o",
-  voice_NOp: "NOpBlnGInO9m6vDvFkFC",
+  adeline: "5l5f8iK3YPeGga21rQIX",
+  riley: "hA4zGnmTwX2NQiTRMt7o",
+  grandpa: "NOpBlnGInO9m6vDvFkFC",
 };
 
 const VOICE_ID = VOICES[VOICE_KEY];

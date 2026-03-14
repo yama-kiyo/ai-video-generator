@@ -14,9 +14,9 @@ export const ELEVENLABS = {
     aria:      { id: "9BWtsMINqrJLrRacOk9x", name: "Aria",      gender: "female" },
     lily:      { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily",      gender: "female" },
     charlotte: { id: "XB0fDUnXU5powFXDhCwa", name: "Charlotte", gender: "female" },
-    voice_5l5f:{ id: "5l5f8iK3YPeGga21rQIX", name: "Voice A",   gender: "female" },
-    voice_hA4z:{ id: "hA4zGnmTwX2NQiTRMt7o", name: "Voice B",   gender: "female" },
-    voice_NOp: { id: "NOpBlnGInO9m6vDvFkFC", name: "Voice C",   gender: "female" },
+    adeline:   { id: "5l5f8iK3YPeGga21rQIX", name: "Adeline",            gender: "female" },
+    riley:     { id: "hA4zGnmTwX2NQiTRMt7o", name: "Riley",              gender: "female" },
+    grandpa:   { id: "NOpBlnGInO9m6vDvFkFC", name: "Grandpa Spuds Oxley", gender: "male"   },
   },
 
   // デフォルトボイス

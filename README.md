@@ -79,7 +79,7 @@ node scripts/test-apis.mjs
 node scripts/generate-ai-video.mjs
 
 # ボイスを指定
-node scripts/generate-ai-video.mjs --voice voice_5l5f
+node scripts/generate-ai-video.mjs --voice adeline
 
 # 音声のみ生成（動画スキップ）
 node scripts/generate-ai-video.mjs --skip-video
@@ -141,13 +141,13 @@ node scripts/generate-ai-video.mjs --config sections.json
 | `aria` | Aria | デフォルト |
 | `lily` | Lily | - |
 | `charlotte` | Charlotte | - |
-| `voice_5l5f` | Voice A | - |
-| `voice_hA4z` | Voice B | - |
-| `voice_NOp` | Voice C | - |
+| `adeline` | Adeline | - |
+| `riley` | Riley | - |
+| `grandpa` | Grandpa Spuds Oxley | - |
 
 ボイスの指定：
 ```bash
-node scripts/generate-ai-video.mjs --voice voice_5l5f
+node scripts/generate-ai-video.mjs --voice adeline
 ```
 
 ## プロジェクト構成
