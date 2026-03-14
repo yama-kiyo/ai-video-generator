@@ -1,0 +1,26 @@
+{
+  "title": "アパート建設の流れ",
+  "subtitle": "着工〜組立編",
+  "organization": "CEL CORPORATION",
+  "theme": "dark",
+  "endingText": "つづく",
+  "sections": [
+    {
+      "caption": "工事着手前",
+      "photos": ["photos/001.jpg", "photos/002.jpg"],
+      "audio": "narration/nar_01.mp3",
+      "durSec": 10.0
+    },
+    {
+      "caption": "整地作業",
+      "video": "clips/clip_01.mp4",
+      "audio": "narration/nar_02.mp3",
+      "durSec": 10.4
+    },
+    {
+      "caption": "本体基礎工事の準備",
+      "photos": ["photos/003.jpg", "photos/004.jpg", "photos/005.jpg"],
+      "durSec": 15.0
+    }
+  ]
+}

@@ -1,245 +1,212 @@
 # AI Video Generator with Remotion
 
-ナレーション原稿からAI動画を自動生成するパイプライン。
+写真・AI映像・ナレーションを自由に組み合わせて動画を自動生成するパイプライン。
 **Veo 3.1** / **Runway**（映像生成）+ **ElevenLabs**（音声合成）+ **Remotion**（合成・レンダリング）
 
-## デモ
+## 3つのモード
 
-タイトル → AI生成映像セクション（ナレーション付き）× N → エンディング の構成で自動生成します。
+セクションごとに素材を自由に組み合わせ可能：
+
+| モード | 映像 | ナレーション | 用途 |
+|--------|------|-------------|------|
+| 写真スライドショー | 写真（Ken Burns効果付き） | あり / なし | 施工記録、紹介動画 |
+| AI動画 | Veo 3.1 / Runway 生成 | あり / なし | プロモーション、イメージ映像 |
+| 混在 | セクションごとに切替 | セクションごとに切替 | 柔軟な構成 |
 
 ```
-ナレーション原稿
-    ├── 動画生成（選択式）
-    │     --engine veo          → Veo 3.1 (T2V)
-    │     --engine runway       → Runway gen4.5 (T2V)
-    │     --engine runway-aleph → Runway Aleph (V2V)
-    │
-    └── ElevenLabs v3 → ナレーション (nar_XX.mp3)
-                ↓
-        Remotion で合成
-                ↓
-        完成動画 (MP4)
+project.json（プロジェクト定義）
+  ↓
+各セクションの素材タイプに応じて自動判定
+  ├── photos: [...] → 写真スライドショー (Img + Ken Burns)
+  ├── video: "..."  → 動画再生 (OffthreadVideo)
+  └── audio: "..."  → ナレーション再生 (Audio)
+          ↓
+    Remotion で合成 → 完成動画 (MP4)
 ```
 
 ## 必要なもの
 
-| サービス | 用途 | 取得先 |
-|---------|------|--------|
-| [Google AI Studio](https://aistudio.google.com/apikey) | Gemini / Veo 3.1（映像生成） | APIキー |
-| [ElevenLabs](https://elevenlabs.io/settings/api-keys) | 音声合成（日本語対応 v3） | APIキー |
-| [Runway](https://app.runwayml.com/settings/api-keys) | Gen4.5 T2V / Aleph V2V（オプション） | APIキー |
-| [Node.js](https://nodejs.org/) | v18以上 | - |
+| サービス | 用途 | 必須? |
+|---------|------|-------|
+| [Node.js](https://nodejs.org/) v18以上 | 実行環境 | 必須 |
+| [Google AI Studio](https://aistudio.google.com/apikey) | Veo 3.1 映像生成 | AI動画を使う場合 |
+| [ElevenLabs](https://elevenlabs.io/settings/api-keys) | 音声合成（日本語v3） | ナレーション自動生成する場合 |
+| [Runway](https://app.runwayml.com/settings/api-keys) | Gen4.5 / Aleph V2V | Runwayを使う場合 |
+
+**写真スライドショーだけなら API キー不要**で動画を作成できます。
 
 ## セットアップ
-
-### 1. リポジトリをクローン
 
 ```bash
 git clone https://github.com/yama-kiyo/ai-video-generator.git
 cd ai-video-generator
 npm install
+cp .env.example .env   # APIキーを設定（AI機能を使う場合）
 ```
 
-### 2. APIキーを設定
+## クイックスタート
+
+### 写真スライドショー（APIキー不要）
+
+1. `public/` に写真を配置
+2. `project.json` を作成（後述）
+3. `src/Root.tsx` のプロジェクト定義を更新
+4. `npx remotion studio` でプレビュー
+5. `npx remotion render AIVideo out/video.mp4`
+
+### AI動画 + ナレーション
 
 ```bash
-cp .env.example .env
-```
-
-`.env` を開いて各APIキーを設定：
-
-```env
-GEMINI_API_KEY="your-gemini-api-key"
-ELEVENLABS_API_KEY=your-elevenlabs-api-key
-RUNWAY_API_KEY=your-runway-api-key          # オプション
-```
-
-### 3. API接続テスト
-
-```bash
+# API接続テスト
 node scripts/test-apis.mjs
+
+# AI映像 + ナレーション一括生成
+node scripts/generate-ai-video.mjs
+
+# プレビュー → レンダリング
+npx remotion studio
+npx remotion render AIVideo out/video.mp4
 ```
 
-正常であれば以下のように表示されます：
+## project.json — プロジェクト定義
+
+動画全体の構成を1つのJSONで定義します。セクションごとに写真・動画・ナレーションを自由に指定できます。
+
+```json
+{
+  "title": "アパート建設の流れ",
+  "subtitle": "着工〜組立編",
+  "organization": "CEL CORPORATION",
+  "theme": "dark",
+  "endingText": "つづく",
+  "sections": [
+    {
+      "caption": "工事着手前",
+      "photos": ["photos/001.jpg", "photos/002.jpg"],
+      "audio": "narration/nar_01.mp3",
+      "durSec": 10.0
+    },
+    {
+      "caption": "整地作業",
+      "video": "clips/clip_01.mp4",
+      "audio": "narration/nar_02.mp3",
+      "durSec": 10.4
+    },
+    {
+      "caption": "本体基礎工事の準備",
+      "photos": ["photos/003.jpg", "photos/004.jpg", "photos/005.jpg"],
+      "durSec": 15.0
+    }
+  ]
+}
 ```
-=== API Connection Test ===
 
-1. Gemini API...
-   ✓ Gemini connected: OK
-2. Runway API...
-   ✓ Runway connected (status: 404)
-3. ElevenLabs API...
-   ✓ ElevenLabs connected (v3 model)
+### セクション定義
 
-=== Done ===
-```
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| `caption` | string | 画面に表示するキャプション（必須） |
+| `photos` | string[] | 写真パス配列（`public/` からの相対パス） |
+| `video` | string | 動画パス（`photos` より優先される） |
+| `audio` | string | ナレーション音声パス（オプション） |
+| `durSec` | number | セクションの尺（秒）（必須） |
 
-## 使い方
+### テーマ
 
-### 方法1: 自動生成スクリプト（推奨）
+| テーマ | 背景 | 文字色 | 向いている用途 |
+|--------|------|--------|-------------|
+| `dark` | 黒 (#0A0A0A) | 白 | AI動画、プロモーション |
+| `light` | アイボリー (#F5F3EF) | 黒 | 写真スライドショー、報告書 |
+
+### 尺の決め方ガイド
+
+| 素材 | 推奨 `durSec` |
+|------|--------------|
+| ナレーションあり | ナレーション音声の長さに合わせる |
+| 写真のみ | 写真枚数 x 5秒 |
+| AI動画（ナレなし） | 動画クリップの長さ（8-10秒） |
+
+## AI映像・ナレーション生成
+
+### 生成スクリプト
 
 ```bash
 # Veo 3.1 で生成（デフォルト）
 node scripts/generate-ai-video.mjs
 
-# Runway gen4.5 で生成 (Text-to-Video)
-node scripts/generate-ai-video.mjs --engine runway
-
-# Runway gen4.5 秒数指定（2-10秒、デフォルト5秒）
+# Runway gen4.5 で生成
 node scripts/generate-ai-video.mjs --engine runway --duration 8
 
-# Runway Aleph で V2V（Video-to-Video）
+# Runway Aleph V2V（既存動画をスタイル変換）
 node scripts/generate-ai-video.mjs --engine runway-aleph --v2v input.mp4
 
-# V2V で HTTPS URL を入力に使用
-node scripts/generate-ai-video.mjs --engine runway-aleph --v2v https://example.com/video.mp4
+# ボイス・スキップ指定
+node scripts/generate-ai-video.mjs --voice adeline --skip-video   # ナレーションのみ
+node scripts/generate-ai-video.mjs --skip-audio                    # 動画のみ
 
-# ボイスを指定
-node scripts/generate-ai-video.mjs --voice adeline
-
-# 音声のみ生成（動画スキップ）
-node scripts/generate-ai-video.mjs --skip-video
-
-# 動画のみ生成（音声スキップ）
-node scripts/generate-ai-video.mjs --skip-audio
-
-# カスタムセクション設定を使用
-node scripts/generate-ai-video.mjs --config my-sections.json
-```
-
-### 方法2: 手動ステップ
-
-1. `public/test-ai/` に動画クリップ（`clip_01.mp4` 等）と音声（`nar_01.mp3` 等）を配置
-2. `src/TestAI/TestAI.tsx` の `sections` 配列を編集
-3. Remotion Studio でプレビュー → レンダリング
-
-### Remotion Studio でプレビュー
-
-```bash
-npx remotion studio
-```
-
-ブラウザで `TestAI` コンポジションを選択。
-
-### 動画をレンダリング
-
-```bash
-npx remotion render TestAI out/video.mp4
-```
-
-## 動画生成エンジン
-
-| エンジン | モデル | 用途 | 料金目安 | オプション |
-|---------|--------|------|---------|-----------|
-| `--engine veo` | Veo 3.1 | テキスト→動画 | ~$0.20/クリップ(8秒) | デフォルト |
-| `--engine runway` | gen4.5 | テキスト→動画 | $0.12/秒 | `--duration 2-10` |
-| `--engine runway-aleph` | gen4_aleph | 動画→動画 (V2V) | $0.15/秒 | `--v2v <入力動画>` |
-
-### Runway V2V (Video-to-Video) について
-
-既存の動画をプロンプトで変換するモード。実写→アニメ風、昼→夜、天候変更などに使えます。
-
-```bash
-# ローカルファイル（自動アップロード）
-node scripts/generate-ai-video.mjs --engine runway-aleph --v2v ./source.mp4
-
-# HTTPS URL
-node scripts/generate-ai-video.mjs --engine runway-aleph --v2v https://example.com/video.mp4
-```
-
-## カスタムセクション設定
-
-`sections.json` を作成してセクションを自由に定義できます：
-
-```json
-[
-  {
-    "narration": "ここにナレーションテキストを入力",
-    "videoPrompt": "English prompt for video generation, 4K cinematic",
-    "caption": "画面に表示するキャプション"
-  },
-  {
-    "narration": "次のセクションのナレーション",
-    "videoPrompt": "Another scene description for video generation",
-    "caption": "セクション2"
-  }
-]
-```
-
-```bash
+# カスタムセクション設定
 node scripts/generate-ai-video.mjs --config sections.json
 ```
 
-## ElevenLabs ボイス一覧
+### 動画生成エンジン
 
-| キー | 名前 | 説明 |
-|------|------|------|
-| `aria` | Aria | デフォルト |
-| `lily` | Lily | - |
-| `charlotte` | Charlotte | - |
-| `adeline` | Adeline | - |
-| `riley` | Riley | - |
-| `grandpa` | Grandpa Spuds Oxley | - |
+| エンジン | モデル | 用途 | 料金目安 |
+|---------|--------|------|---------|
+| `--engine veo` | Veo 3.1 | テキスト→動画 | ~$0.20/クリップ(8秒) |
+| `--engine runway` | gen4.5 | テキスト→動画 | $0.12/秒 (2-10秒) |
+| `--engine runway-aleph` | gen4_aleph | 動画→動画 V2V | $0.15/秒 |
 
-ボイスの指定：
-```bash
-node scripts/generate-ai-video.mjs --voice adeline
-```
+### ElevenLabs ボイス（v3モデル・日本語対応）
+
+| キー | 名前 |
+|------|------|
+| `aria` | Aria（デフォルト） |
+| `adeline` | Adeline |
+| `riley` | Riley |
+| `grandpa` | Grandpa Spuds Oxley |
+| `lily` | Lily |
+| `charlotte` | Charlotte |
+
+## Claude Code との連携
+
+[Claude Code](https://claude.ai/claude-code) のスキルとして使えます。
+`ai-video` と入力すると対話形式で以下をヒアリングし、自動で動画を生成します：
+
+1. 動画のタイトル・内容
+2. 素材の種類（写真 / AI生成 / 混在）
+3. ナレーションの有無（自動生成 / 手動 / なし）
+4. テーマ（ダーク / ライト）
 
 ## プロジェクト構成
 
 ```
 ├── src/
+│   ├── AIVideo/
+│   │   └── AIVideo.tsx          # 統合コンポジション（写真/動画/ナレーション自動切替）
 │   ├── TestAI/
-│   │   └── TestAI.tsx          # AI動画コンポジション
+│   │   └── TestAI.tsx           # AI動画専用コンポジション（旧）
 │   ├── lib/
-│   │   └── api-config.ts       # API設定（モデル・ボイス）
-│   ├── Root.tsx                 # コンポジション登録
-│   └── index.ts                # エントリーポイント
+│   │   └── api-config.ts        # API設定（モデル・ボイス）
+│   ├── Root.tsx                  # コンポジション登録
+│   └── index.ts                  # エントリーポイント
 ├── scripts/
-│   ├── generate-ai-video.mjs   # 一括生成スクリプト（Veo/Runway/V2V対応）
-│   └── test-apis.mjs           # API接続テスト
-├── public/
-│   └── test-ai/                # 生成アセット保存先
-├── .env.example                # API キーのテンプレート
-├── remotion.config.ts          # Remotion設定
+│   ├── generate-ai-video.mjs    # AI映像+ナレーション一括生成
+│   └── test-apis.mjs            # API接続テスト
+├── public/                       # 素材・生成アセット保存先
+├── .env.example                  # APIキーテンプレート
+├── project.example.json          # プロジェクト定義サンプル
+├── sections.example.json         # AI生成用セクション定義サンプル
+├── remotion.config.ts
 └── package.json
 ```
 
-## コンポジションの仕組み
-
-`TestAI.tsx` の構成：
-
-1. **タイトル** (3秒) - フェードイン/アウト
-2. **ビデオセクション x N** - AI生成映像 + ナレーション + キャプション
-   - セクション間は0.5秒のクロスフェード
-   - 各セクションの尺はナレーション音声の長さに自動合わせ
-3. **エンディング** (2.5秒) - フェードアウト
-
-### カスタマイズポイント
-
-- `BG`: 背景色（デフォルト: `#0A0A0A` ダークテーマ）
-- `CROSSFADE`: クロスフェード長（デフォルト: 15フレーム = 0.5秒）
-- `TITLE_DUR` / `END_DUR`: タイトル・エンディングの長さ
-
 ## 注意事項
 
-- **Veo 3.1** の動画生成には1クリップあたり1〜3分かかります
-- **Runway** の生成も1〜5分程度かかります（V2Vはやや長め）
-- **ElevenLabs v3** は日本語対応ですが、v2は日本語非対応です
-- 生成されたアセット（`.mp4`, `.mp3`）は `.gitignore` で除外されています
-- Gemini APIキーに `--` などの特殊文字が含まれる場合は引用符で囲んでください
-
-## API料金の目安
-
-| サービス | 単位 | 料金 |
-|---------|------|------|
-| Veo 3.1 | 1クリップ（8秒） | 約$0.20 |
-| Runway gen4.5 (T2V) | 1秒 | $0.12 |
-| Runway Aleph (V2V) | 1秒 | $0.15 |
-| ElevenLabs v3 | 1,000文字 | 約$0.30 |
-
-3セクションの動画1本で約 **$1〜2** 程度です。
+- Veo 3.1 の動画生成には1クリップあたり1〜3分かかります
+- Runway の生成も1〜5分程度かかります
+- ElevenLabs v3 は日本語対応ですが、v2は非対応です
+- 生成アセット（.mp4, .mp3）は `.gitignore` で除外されています
+- 写真スライドショーだけなら APIキー不要で利用可能です
 
 ## ライセンス
 
