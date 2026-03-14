@@ -229,12 +229,12 @@ export const TestAI: React.FC = () => {
         <Ending />
       </Sequence>
 
-      {/* ナレーション */}
+      {/* ナレーション（頭尻に1秒パディングで重なり防止） */}
       {sections.map((sec, i) => (
         <Sequence
           key={`nar-${i}`}
-          from={sectionStarts[i]}
-          durationInFrames={TEST_AI_TOTAL - sectionStarts[i]}
+          from={sectionStarts[i] + 30}
+          durationInFrames={sectionFrames[i] - 30}
         >
           <Audio src={staticFile(sec.audio)} volume={1} />
         </Sequence>

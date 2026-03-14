@@ -200,6 +200,18 @@ node scripts/generate-ai-video.mjs --config sections.json
 └── package.json
 ```
 
+## ナレーション間隔について
+
+各ナレーション音声の再生開始を **1秒（30フレーム）遅延** させ、セクション切替時に音声が重ならないようにしています。
+これは `AIVideo.tsx` / `TestAI.tsx` の Audio Sequence に組み込み済みです。
+
+```tsx
+// from に +30（1秒遅延）、durationInFrames をセクション尺内に制限
+<Sequence from={sectionStarts[i] + 30} durationInFrames={sectionFrames[i] - 30}>
+  <Audio src={staticFile(sec.audio)} volume={1} />
+</Sequence>
+```
+
 ## 注意事項
 
 - Veo 3.1 の動画生成には1クリップあたり1〜3分かかります

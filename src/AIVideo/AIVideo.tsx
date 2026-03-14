@@ -228,10 +228,10 @@ export const AIVideo: React.FC<{ project: ProjectDef }> = ({ project: inputProje
         <Ending text={project.endingText ?? "つづく"} theme={theme} />
       </Sequence>
 
-      {/* ナレーション（audioがあるセクションのみ） */}
+      {/* ナレーション（頭尻に1秒パディングで重なり防止） */}
       {project.sections.map((sec, i) =>
         sec.audio ? (
-          <Sequence key={`nar-${i}`} from={starts[i]} durationInFrames={total - starts[i]}>
+          <Sequence key={`nar-${i}`} from={starts[i] + 30} durationInFrames={frames[i] - 30}>
             <Audio src={staticFile(sec.audio)} volume={1} />
           </Sequence>
         ) : null,
