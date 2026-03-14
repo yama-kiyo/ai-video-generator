@@ -1,0 +1,33 @@
+{
+  "name": "ai-video-generator",
+  "version": "1.0.0",
+  "description": "AI Video Generator - Veo 3.1 + ElevenLabs + Remotion pipeline",
+  "scripts": {
+    "dev": "remotion studio --open",
+    "generate": "node scripts/generate-ai-video.mjs",
+    "test-apis": "node scripts/test-apis.mjs",
+    "render": "remotion render TestAI out/video.mp4",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade"
+  },
+  "repository": {},
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^1.45.0",
+    "@remotion/cli": "^4.0.0",
+    "@runwayml/sdk": "^3.15.0",
+    "dotenv": "^17.3.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "^4.0.0",
+    "zod": "3.22.3"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "^4.0.0",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.6.0",
+    "typescript": "5.9.3"
+  }
+}

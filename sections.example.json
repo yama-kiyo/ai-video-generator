@@ -1,0 +1,17 @@
+[
+  {
+    "narration": "セレコーポレーションのアパート建設、着工から組み立ての流れを紹介します。こちらが工事着手前の現場の様子です。",
+    "videoPrompt": "Aerial drone shot of an empty construction lot in a Japanese residential neighborhood, sunny day, 4K cinematic",
+    "caption": "工事着手前"
+  },
+  {
+    "narration": "まず、基礎工事に向けた整地作業から始まります。整地をしながら、余分な土、いわゆる残土を取り除いていきます。",
+    "videoPrompt": "Ground-level shot of a small excavator grading and leveling soil on a Japanese construction site, workers in helmets, 4K cinematic",
+    "caption": "整地作業"
+  },
+  {
+    "narration": "本体基礎工事の準備が整いました。これから本体基礎工事が始まります。",
+    "videoPrompt": "Close-up of rebar framework and wooden formwork being prepared for a concrete foundation pour at a Japanese apartment construction site, 4K cinematic",
+    "caption": "本体基礎工事の準備"
+  }
+]
