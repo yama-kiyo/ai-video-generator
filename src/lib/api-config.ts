@@ -34,13 +34,16 @@ export const GEMINI = {
   },
 };
 
-// ── Runway (Gen-4) ──────────────────────────────────────
+// ── Runway ───────────────────────────────────────────────
 export const RUNWAY = {
   apiKey: process.env.RUNWAY_API_KEY ?? "",
   models: {
-    turbo: "gen4_turbo",     // 高速（$0.05/秒）
-    standard: "gen4.5",       // 高品質（$0.12/秒）
-    aleph: "gen4_aleph",      // 最高品質（$0.15/秒）
+    // Text-to-Video
+    textToVideo: "gen4.5",       // gen4系で唯一t2v対応（$0.12/秒, 2-10秒）
+    // Video-to-Video
+    videoToVideo: "gen4_aleph",  // v2v専用モデル（$0.15/秒）
+    // Image-to-Video
+    imageToVideo: "gen4_turbo",  // i2v高速（$0.05/秒）
   },
   defaultRatio: "1280:720" as const,
   defaultDuration: 5,

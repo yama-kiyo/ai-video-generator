@@ -1,7 +1,7 @@
 # AI Video Generator with Remotion
 
 ナレーション原稿からAI動画を自動生成するパイプライン。
-**Veo 3.1**（映像生成）+ **ElevenLabs**（音声合成）+ **Remotion**（合成・レンダリング）
+**Veo 3.1** / **Runway**（映像生成）+ **ElevenLabs**（音声合成）+ **Remotion**（合成・レンダリング）
 
 ## デモ
 
@@ -9,7 +9,11 @@
 
 ```
 ナレーション原稿
-    ├── Veo 3.1 → 映像クリップ (clip_XX.mp4)
+    ├── 動画生成（選択式）
+    │     --engine veo          → Veo 3.1 (T2V)
+    │     --engine runway       → Runway gen4.5 (T2V)
+    │     --engine runway-aleph → Runway Aleph (V2V)
+    │
     └── ElevenLabs v3 → ナレーション (nar_XX.mp3)
                 ↓
         Remotion で合成
@@ -23,7 +27,7 @@
 |---------|------|--------|
 | [Google AI Studio](https://aistudio.google.com/apikey) | Gemini / Veo 3.1（映像生成） | APIキー |
 | [ElevenLabs](https://elevenlabs.io/settings/api-keys) | 音声合成（日本語対応 v3） | APIキー |
-| [Runway](https://app.runwayml.com/settings/api-keys) | Gen4.5 動画生成（オプション） | APIキー |
+| [Runway](https://app.runwayml.com/settings/api-keys) | Gen4.5 T2V / Aleph V2V（オプション） | APIキー |
 | [Node.js](https://nodejs.org/) | v18以上 | - |
 
 ## セットアップ
@@ -31,7 +35,7 @@
 ### 1. リポジトリをクローン
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-video-generator.git
+git clone https://github.com/yama-kiyo/ai-video-generator.git
 cd ai-video-generator
 npm install
 ```
@@ -75,8 +79,20 @@ node scripts/test-apis.mjs
 ### 方法1: 自動生成スクリプト（推奨）
 
 ```bash
-# デフォルトのサンプルセクションで生成
+# Veo 3.1 で生成（デフォルト）
 node scripts/generate-ai-video.mjs
+
+# Runway gen4.5 で生成 (Text-to-Video)
+node scripts/generate-ai-video.mjs --engine runway
+
+# Runway gen4.5 秒数指定（2-10秒、デフォルト5秒）
+node scripts/generate-ai-video.mjs --engine runway --duration 8
+
+# Runway Aleph で V2V（Video-to-Video）
+node scripts/generate-ai-video.mjs --engine runway-aleph --v2v input.mp4
+
+# V2V で HTTPS URL を入力に使用
+node scripts/generate-ai-video.mjs --engine runway-aleph --v2v https://example.com/video.mp4
 
 # ボイスを指定
 node scripts/generate-ai-video.mjs --voice adeline
@@ -111,6 +127,26 @@ npx remotion studio
 npx remotion render TestAI out/video.mp4
 ```
 
+## 動画生成エンジン
+
+| エンジン | モデル | 用途 | 料金目安 | オプション |
+|---------|--------|------|---------|-----------|
+| `--engine veo` | Veo 3.1 | テキスト→動画 | ~$0.20/クリップ(8秒) | デフォルト |
+| `--engine runway` | gen4.5 | テキスト→動画 | $0.12/秒 | `--duration 2-10` |
+| `--engine runway-aleph` | gen4_aleph | 動画→動画 (V2V) | $0.15/秒 | `--v2v <入力動画>` |
+
+### Runway V2V (Video-to-Video) について
+
+既存の動画をプロンプトで変換するモード。実写→アニメ風、昼→夜、天候変更などに使えます。
+
+```bash
+# ローカルファイル（自動アップロード）
+node scripts/generate-ai-video.mjs --engine runway-aleph --v2v ./source.mp4
+
+# HTTPS URL
+node scripts/generate-ai-video.mjs --engine runway-aleph --v2v https://example.com/video.mp4
+```
+
 ## カスタムセクション設定
 
 `sections.json` を作成してセクションを自由に定義できます：
@@ -119,7 +155,7 @@ npx remotion render TestAI out/video.mp4
 [
   {
     "narration": "ここにナレーションテキストを入力",
-    "videoPrompt": "English prompt for Veo 3.1 video generation, 4K cinematic",
+    "videoPrompt": "English prompt for video generation, 4K cinematic",
     "caption": "画面に表示するキャプション"
   },
   {
@@ -161,7 +197,7 @@ node scripts/generate-ai-video.mjs --voice adeline
 │   ├── Root.tsx                 # コンポジション登録
 │   └── index.ts                # エントリーポイント
 ├── scripts/
-│   ├── generate-ai-video.mjs   # 一括生成スクリプト
+│   ├── generate-ai-video.mjs   # 一括生成スクリプト（Veo/Runway/V2V対応）
 │   └── test-apis.mjs           # API接続テスト
 ├── public/
 │   └── test-ai/                # 生成アセット保存先
@@ -189,6 +225,7 @@ node scripts/generate-ai-video.mjs --voice adeline
 ## 注意事項
 
 - **Veo 3.1** の動画生成には1クリップあたり1〜3分かかります
+- **Runway** の生成も1〜5分程度かかります（V2Vはやや長め）
 - **ElevenLabs v3** は日本語対応ですが、v2は日本語非対応です
 - 生成されたアセット（`.mp4`, `.mp3`）は `.gitignore` で除外されています
 - Gemini APIキーに `--` などの特殊文字が含まれる場合は引用符で囲んでください
@@ -198,8 +235,9 @@ node scripts/generate-ai-video.mjs --voice adeline
 | サービス | 単位 | 料金 |
 |---------|------|------|
 | Veo 3.1 | 1クリップ（8秒） | 約$0.20 |
+| Runway gen4.5 (T2V) | 1秒 | $0.12 |
+| Runway Aleph (V2V) | 1秒 | $0.15 |
 | ElevenLabs v3 | 1,000文字 | 約$0.30 |
-| Runway Gen4.5 | 1秒 | $0.12 |
 
 3セクションの動画1本で約 **$1〜2** 程度です。
 
