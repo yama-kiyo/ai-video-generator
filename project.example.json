@@ -15,6 +15,11 @@
       "caption": "整地作業",
       "video": "clips/clip_01.mp4",
       "audio": "narration/nar_02.mp3",
+      "narration": "整地作業が始まりました。重機が入り、地面を平らにしていきます。",
+      "manualSubtitles": [
+        { "text": "整地作業が始まりました。", "atSec": 0 },
+        { "text": "重機が入り、地面を平らにしていきます。", "atSec": 4.2 }
+      ],
       "durSec": 10.4
     },
     {

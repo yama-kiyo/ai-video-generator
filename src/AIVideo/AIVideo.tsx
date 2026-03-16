@@ -28,6 +28,11 @@ export interface MediaItem {
 }
 
 // ── 型定義 ──
+export interface SubtitleEntry {
+  text: string;
+  atSec: number;
+}
+
 export interface SectionDef {
   caption: string;
   photos?: string[];          // 写真モード
@@ -35,6 +40,7 @@ export interface SectionDef {
   media?: MediaItem[];        // 混在モード（写真+i2v動画）
   audio?: string;             // ナレーション音声（オプション）
   narration?: string;         // ナレーション原稿（字幕モード用）
+  manualSubtitles?: SubtitleEntry[];  // Whisper実測による手動字幕タイミング（buildSubtitlesより優先）
   durSec: number;             // セクション尺（秒）
 }
 
@@ -230,26 +236,32 @@ const MediaSection: React.FC<{
           extrapolateLeft: "clamp", extrapolateRight: "clamp",
         });
 
+        if (item.type === "video") {
+          return (
+            <Sequence key={item.src} from={start} durationInFrames={perItem}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden", opacity: itemOpacity }}>
+                <OffthreadVideo
+                  src={staticFile(item.src)}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  muted
+                />
+              </div>
+            </Sequence>
+          );
+        }
+
         return (
           <div key={item.src} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, overflow: "hidden", opacity: itemOpacity }}>
-            {item.type === "video" ? (
-              <OffthreadVideo
-                src={staticFile(item.src)}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                muted
-              />
-            ) : (
-              <Img
-                src={staticFile(item.src)}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transform: `scale(${scale})`,
-                  transformOrigin: "center center",
-                }}
-              />
-            )}
+            <Img
+              src={staticFile(item.src)}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${scale})`,
+                transformOrigin: "center center",
+              }}
+            />
           </div>
         );
       })}
@@ -345,9 +357,11 @@ export const AIVideo: React.FC<{ project: ProjectDef }> = ({ project: inputProje
           sec.photos ? sec.photos.map((src) => ({ type: "photo" as const, src })) :
           null;
 
-        const subs = isSubtitle && sec.narration
-          ? buildSubtitles(sec.narration, sec.durSec)
-          : undefined;
+        const subs = sec.manualSubtitles
+          ? sec.manualSubtitles
+          : isSubtitle && sec.narration
+            ? buildSubtitles(sec.narration, sec.durSec)
+            : undefined;
 
         return (
           <Sequence key={i} from={starts[i]} durationInFrames={frames[i]}>

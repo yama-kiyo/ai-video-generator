@@ -166,6 +166,7 @@ npx remotion render AIVideo out/documentary.mp4
 | `media` | MediaItem[] | 写真+動画混在配列（`{ type, src }`） |
 | `audio` | string | ナレーション音声パス |
 | `narration` | string | ナレーション原稿（字幕モード用） |
+| `manualSubtitles` | `{text, atSec}[]` | Whisper実測の手動字幕タイミング（buildSubtitlesより優先） |
 | `durSec` | number | セクション尺（秒）— ナレーション音声の実尺に合わせる |
 
 **素材の優先順位**: `video` > `media` > `photos`
@@ -255,6 +256,8 @@ node scripts/generate-ai-video.mjs --config sections.json
 │   └── index.ts                  # エントリーポイント
 ├── scripts/
 │   ├── generate-ai-video.mjs    # AI映像+ナレーション一括生成
+│   ├── export-fcpxml.mjs        # FCPXML書き出し（Premiere Pro / DaVinci Resolve）
+│   ├── export-srt.mjs           # SRT字幕書き出し（YouTube / Premiere Pro）
 │   └── test-apis.mjs            # API接続テスト
 ├── public/                       # 素材・生成アセット保存先
 ├── .env.example                  # APIキーテンプレート
@@ -280,6 +283,54 @@ const sectionFrames = narFrames.map((nf) => nf + NAR_PAD * 2);
 <Sequence from={sectionStarts[i] + NAR_PAD} durationInFrames={narFrames[i]}>
   <Audio src={staticFile(sec.audio)} volume={1} />
 </Sequence>
+```
+
+## FCPXML・SRT書き出し（Premiere Pro / DaVinci Resolve連携）
+
+Remotionのタイムラインを他のNLEに持っていくためのエクスポート機能。
+
+```bash
+# FCPXML書き出し（Premiere Pro / DaVinci Resolve用タイムライン）
+node scripts/export-fcpxml.mjs
+node scripts/export-fcpxml.mjs --config my-project.json --out out/my.fcpxml
+
+# SRT字幕書き出し（YouTube / Premiere Pro / VLC）
+node scripts/export-srt.mjs
+node scripts/export-srt.mjs --config my-project.json --out out/my.srt
+```
+
+**FCPXMLに含まれるデータ:**
+- V1（映像トラック）: 画像・動画クリップの配置とタイミング
+- A1（ナレーショントラック）: ナレーション音声の配置
+- リソース定義: 全素材ファイルへのパス参照
+
+**SRTの字幕タイミング:**
+- `manualSubtitles` がある場合: Whisper実測タイミングを使用
+- `narration` のみの場合: `buildSubtitles()` で文字数比率から自動算出
+
+### Whisperによる字幕タイミング精密調整
+
+`buildSubtitles()` の自動算出では数字・固有名詞が多い場合にズレが生じる。[faster-whisper](https://github.com/SYSTRAN/faster-whisper) で実測し `manualSubtitles` に設定すると正確になる。
+
+```bash
+pip3 install faster-whisper
+
+python3 -c "
+from faster_whisper import WhisperModel
+model = WhisperModel('base', compute_type='int8')
+segments, _ = model.transcribe('public/project/nar_01.mp3', language='ja', word_timestamps=True)
+for seg in segments:
+    print(f'[{seg.start:.2f}] {seg.text}')
+"
+```
+
+```json
+{
+  "manualSubtitles": [
+    { "text": "最初の文。", "atSec": 0 },
+    { "text": "次の文。", "atSec": 3.2 }
+  ]
+}
 ```
 
 ## 注意事項
