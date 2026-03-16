@@ -16,7 +16,7 @@ const sampleProject: ProjectDef = {
     { caption: "本体基礎工事の準備", video: "test-ai/clip_03.mp4", audio: "test-ai/nar_03.mp3", durSec: 7.3 },
   ],
 };
-const sampleTimeline = calcTimeline(sampleProject.sections);
+const sampleTimeline = calcTimeline(sampleProject.sections, 0);
 
 export const RemotionRoot: React.FC = () => {
   return (
